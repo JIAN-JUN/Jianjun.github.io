@@ -233,6 +233,22 @@
                     <div class="rest-list" id="rest-list-friday" style="display: none;"></div>
                 </div>
             </th>
+            <th>星期六
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-saturday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('saturday')">+</div>
+                    <div class="rest-list" id="rest-list-saturday" style="display: none;"></div>
+                </div>
+            </th>
+            <th>星期天
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-sunday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('sunday')">+</div>
+                    <div class="rest-list" id="rest-list-sunday" style="display: none;"></div>
+                </div>
+            </th>
         </tr>
         <tr class="time-slot">
             <td>上午</td>
@@ -249,6 +265,12 @@
                 <div class="add-button" onclick="addGradeSection(this)">+</div>
             </td>
             <td data-time="friday-am" data-day="friday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="saturday-am" data-day="saturday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="sunday-am" data-day="sunday">
                 <div class="add-button" onclick="addGradeSection(this)">+</div>
             </td>
         </tr>
@@ -269,6 +291,12 @@
             <td data-time="friday-pm" data-day="friday">
                 <div class="add-button" onclick="addGradeSection(this)">+</div>
             </td>
+            <td data-time="saturday-pm" data-day="saturday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="sunday-pm" data-day="sunday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
         </tr>
         <tr class="time-slot">
             <td>晚上</td>
@@ -285,6 +313,12 @@
                 <div class="add-button" onclick="addGradeSection(this)">+</div>
             </td>
             <td data-time="friday-eve" data-day="friday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="saturday-eve" data-day="saturday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="sunday-eve" data-day="sunday">
                 <div class="add-button" onclick="addGradeSection(this)">+</div>
             </td>
         </tr>
@@ -322,7 +356,9 @@
             tuesday: new Set(),
             wednesday: new Set(),
             thursday: new Set(),
-            friday: new Set()
+            friday: new Set(),
+            saturday: new Set(),
+            sunday: new Set()
         };
 
         // 初始化老师和年级列表
@@ -503,7 +539,7 @@
 
         // 更新休息老师列表
         function updateRestLists() {
-            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
                 updateRestList(day);
             });
         }
@@ -524,7 +560,7 @@
 
         // 更新休息老师显示
         function updateRestTeachersDisplay() {
-            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
                 const restTeachersDiv = document.getElementById(`rest-teachers-${day}`);
                 const restTeachers = restTeachersByDay[day];
                 restTeachersDiv.innerHTML = Array.from(restTeachers).map(t => `
