@@ -2,24 +2,887 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>我的个人网站</title>
-<style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化排课表格</title>
+    <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 20px;
         }
         h1 {
-            color: #2c3e50;
+            text-align: center;
+            color: #333;
         }
-        img {
-            border: 2px solid #3498db;
-            border-radius: 10px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .time-slot {
+            background-color: #fff7e6;
+        }
+        select {
+            padding: 5px;
+            margin: 5px;
+            width: 120px;
+        }
+        .grade-section {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+        .grade-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .subject {
+            color: #0066cc;
+        }
+        .conflict {
+            color: red;
+        }
+        .rest-section {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        .rest-label {
+            font-weight: bold;
+            color: #555;
+            display: inline;
+            margin-right: 5px;
+        }
+        .rest-button {
+            cursor: pointer;
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 5px 10px;
+            border: 1px solid #0066cc;
+            border-radius: 5px;
+            background-color: #e6f7ff;
+        }
+        .rest-button:hover {
+            background-color: #cceeff;
+        }
+        .rest-list {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 10;
+        }
+        .rest-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .rest-item span {
+            margin-right: 5px;
+        }
+        .rest-teacher {
+            display: inline-flex;
+            align-items: center;
+            margin: 0 5px;
+        }
+        .teacher-section {
+            display: block;
+        }
+        .teacher-section.hidden {
+            display: none;
+        }
+        .add-button {
+            cursor: pointer;
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #0066cc;
+            border-radius: 5px;
+            background-color: #e6f7ff;
+        }
+        .add-button:hover {
+            background-color: #cceeff;
+        }
+        .delete-button {
+            cursor: pointer;
+            color: #ff3333;
+            font-weight: bold;
+            font-size: 18px;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border: none;
+            border-radius: 50%;
+            background-color: #ffe6e6;
+        }
+        .delete-button:hover {
+            background-color: #ffcccc;
+        }
+        .grade-section .delete-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+        .custom-section {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .custom-section h3 {
+            margin-top: 0;
+        }
+        .custom-list {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .custom-item {
+            display: inline-flex;
+            align-items: center;
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .custom-item span {
+            cursor: pointer;
+        }
+        .custom-item input {
+            padding: 5px;
+            margin-right: 10px;
+            width: 100px;
+            border: none;
+            background: transparent;
+        }
+        .custom-add {
+            margin: 5px;
+        }
+        .color-picker {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-    <h1>欢迎来到我的网站</h1>
-    <p>你好，我是[贱菌]！这是一个我用AI辅助做出来的软件，这是第二次编辑的文件。</p>
-    <img src="https://i.imgur.com/1Nmu0Wz.jpeg" alt="我的照片">
+    <h1>自动化排课表格</h1>
+
+    <table>
+        <tr>
+            <th>时段</th>
+            <th>星期一
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-monday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('monday')">+</div>
+                    <div class="rest-list" id="rest-list-monday" style="display: none;"></div>
+                </div>
+            </th>
+            <th>星期二
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-tuesday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('tuesday')">+</div>
+                    <div class="rest-list" id="rest-list-tuesday" style="display: none;"></div>
+                </div>
+            </th>
+            <th>星期三
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-wednesday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('wednesday')">+</div>
+                    <div class="rest-list" id="rest-list-wednesday" style="display: none;"></div>
+                </div>
+            </th>
+            <th>星期四
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-thursday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('thursday')">+</div>
+                    <div class="rest-list" id="rest-list-thursday" style="display: none;"></div>
+                </div>
+            </th>
+            <th>星期五
+                <div class="rest-section">
+                    <div class="rest-label">休息老师:</div>
+                    <div id="rest-teachers-friday" class="rest-teachers"></div>
+                    <div class="rest-button" onclick="toggleRestList('friday')">+</div>
+                    <div class="rest-list" id="rest-list-friday" style="display: none;"></div>
+                </div>
+            </th>
+        </tr>
+        <tr class="time-slot">
+            <td>上午</td>
+            <td data-time="monday-am" data-day="monday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="tuesday-am" data-day="tuesday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="wednesday-am" data-day="wednesday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="thursday-am" data-day="thursday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="friday-am" data-day="friday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+        </tr>
+        <tr class="time-slot">
+            <td>下午</td>
+            <td data-time="monday-pm" data-day="monday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="tuesday-pm" data-day="tuesday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="wednesday-pm" data-day="wednesday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="thursday-pm" data-day="thursday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="friday-pm" data-day="friday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+        </tr>
+        <tr class="time-slot">
+            <td>晚上</td>
+            <td data-time="monday-eve" data-day="monday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="tuesday-eve" data-day="tuesday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="wednesday-eve" data-day="wednesday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="thursday-eve" data-day="thursday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+            <td data-time="friday-eve" data-day="friday">
+                <div class="add-button" onclick="addGradeSection(this)">+</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="custom-section">
+        <h3>自定义设置</h3>
+        <div id="teacher-custom">
+            <h4>老师名称</h4>
+            <div class="custom-list" id="teacher-list">
+                <!-- 动态生成老师列表 -->
+            </div>
+            <div class="custom-add">
+                <input type="text" placeholder="输入老师名称" id="teacher-input">
+                <button class="add-button" onclick="addTeacher()">+</button>
+            </div>
+        </div>
+        <div id="grade-custom">
+            <h4>年级名称</h4>
+            <div class="custom-list" id="grade-list">
+                <!-- 动态生成年级列表 -->
+            </div>
+            <div class="custom-add">
+                <input type="text" placeholder="输入年级名称" id="grade-input">
+                <button class="add-button" onclick="addGrade()">+</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let teachers = ['A', 'B', 'C', 'D'];
+        let grades = ['高一', '高二', '高三'];
+        let restTeachersByDay = {
+            monday: new Set(),
+            tuesday: new Set(),
+            wednesday: new Set(),
+            thursday: new Set(),
+            friday: new Set()
+        };
+
+        // 初始化老师和年级列表
+        function initCustomLists() {
+            updateTeacherList();
+            updateGradeList();
+            updateRestTeachersDisplay();
+        }
+
+        // 更新老师列表
+        function updateTeacherList() {
+            const teacherList = document.getElementById('teacher-list');
+            teacherList.innerHTML = teachers.map(t => `
+                <div class="custom-item">
+                    <span ondblclick="editTeacher(this)">${t}</span>
+                    <div class="delete-button" onclick="deleteTeacher('${t}')">-</div>
+                </div>
+            `).join('');
+            updateTeacherOptions();
+            updateRestLists();
+        }
+
+        // 更新年级列表
+        function updateGradeList() {
+            const gradeList = document.getElementById('grade-list');
+            gradeList.innerHTML = grades.map(g => `
+                <div class="custom-item">
+                    <span ondblclick="editGrade(this)">${g}</span>
+                    <div class="delete-button" onclick="deleteGrade('${g}')">-</div>
+                </div>
+            `).join('');
+            updateGradeOptions();
+        }
+
+        // 添加老师
+        function addTeacher() {
+            const input = document.getElementById('teacher-input');
+            const teacherName = input.value.trim();
+            if (teacherName && !teachers.includes(teacherName)) {
+                teachers.push(teacherName);
+                updateTeacherList();
+                input.value = '';
+            }
+        }
+
+        // 删除老师
+        function deleteTeacher(teacher) {
+            const mainTeacherSelects = document.querySelectorAll('.main-teacher-select');
+            const assistTeacherSelects = document.querySelectorAll('.assist-teacher-select');
+            let isUsed = false;
+
+            mainTeacherSelects.forEach(select => {
+                if (select.value === teacher) isUsed = true;
+            });
+            assistTeacherSelects.forEach(select => {
+                if (select.value === teacher) isUsed = true;
+            });
+
+            if (isUsed) {
+                alert(`老师 ${teacher} 已被排课，无法删除！`);
+                return;
+            }
+
+            teachers = teachers.filter(t => t !== teacher);
+            for (const day in restTeachersByDay) {
+                restTeachersByDay[day].delete(teacher);
+            }
+            updateTeacherList();
+        }
+
+        // 编辑老师
+        function editTeacher(element) {
+            const oldName = element.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldName;
+            input.onblur = function() {
+                const newName = input.value.trim();
+                if (newName && newName !== oldName && !teachers.includes(newName)) {
+                    const index = teachers.indexOf(oldName);
+                    teachers[index] = newName;
+                    for (const day in restTeachersByDay) {
+                        if (restTeachersByDay[day].has(oldName)) {
+                            restTeachersByDay[day].delete(oldName);
+                            restTeachersByDay[day].add(newName);
+                        }
+                    }
+                    const mainTeacherSelects = document.querySelectorAll('.main-teacher-select');
+                    const assistTeacherSelects = document.querySelectorAll('.assist-teacher-select');
+                    mainTeacherSelects.forEach(select => {
+                        if (select.value === oldName) select.value = newName;
+                    });
+                    assistTeacherSelects.forEach(select => {
+                        if (select.value === oldName) select.value = newName;
+                    });
+                    updateTeacherList();
+                } else {
+                    element.textContent = oldName;
+                }
+            };
+            input.onkeydown = function(event) {
+                if (event.key === 'Enter') input.blur();
+            };
+            element.replaceWith(input);
+            input.focus();
+        }
+
+        // 添加年级
+        function addGrade() {
+            const input = document.getElementById('grade-input');
+            const gradeName = input.value.trim();
+            if (gradeName && !grades.includes(gradeName)) {
+                grades.push(gradeName);
+                updateGradeList();
+                input.value = '';
+            }
+        }
+
+        // 删除年级
+        function deleteGrade(grade) {
+            const gradeSelects = document.querySelectorAll('.grade-select');
+            let isUsed = false;
+
+            gradeSelects.forEach(select => {
+                if (select.value === grade) isUsed = true;
+            });
+
+            if (isUsed) {
+                alert(`年级 ${grade} 已被排课，无法删除！`);
+                return;
+            }
+
+            grades = grades.filter(g => g !== grade);
+            updateGradeList();
+        }
+
+        // 编辑年级
+        function editGrade(element) {
+            const oldName = element.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldName;
+            input.onblur = function() {
+                const newName = input.value.trim();
+                if (newName && newName !== oldName && !grades.includes(newName)) {
+                    const index = grades.indexOf(oldName);
+                    grades[index] = newName;
+                    const gradeSelects = document.querySelectorAll('.grade-select');
+                    gradeSelects.forEach(select => {
+                        if (select.value === oldName) {
+                            select.value = newName;
+                            const subjectSelect = select.parentElement.querySelector('.subject-select');
+                            const mainSelect = select.parentElement.querySelector('.main-teacher-select');
+                            const assistSelect = select.parentElement.querySelector('.assist-teacher-select');
+                            subjectSelect.setAttribute('data-grade', newName);
+                            mainSelect.setAttribute('data-grade', newName);
+                            assistSelect.setAttribute('data-grade', newName);
+                        }
+                    });
+                    updateGradeList();
+                } else {
+                    element.textContent = oldName;
+                }
+            };
+            input.onkeydown = function(event) {
+                if (event.key === 'Enter') input.blur();
+            };
+            element.replaceWith(input);
+            input.focus();
+        }
+
+        // 切换休息老师列表显示
+        function toggleRestList(day) {
+            const restList = document.getElementById(`rest-list-${day}`);
+            restList.style.display = restList.style.display === 'block' ? 'none' : 'block';
+            updateRestList(day);
+        }
+
+        // 更新休息老师列表
+        function updateRestLists() {
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+                updateRestList(day);
+            });
+        }
+
+        function updateRestList(day) {
+            const restList = document.getElementById(`rest-list-${day}`);
+            const restTeachers = restTeachersByDay[day];
+            restList.innerHTML = teachers.map(t => `
+                <div class="rest-item">
+                    <span>${t}</span>
+                    <div class="delete-button" onclick="toggleRestTeacher('${day}', '${t}')">
+                        ${restTeachers.has(t) ? '-' : '+'}
+                    </div>
+                </div>
+            `).join('');
+            updateRestTeachersDisplay();
+        }
+
+        // 更新休息老师显示
+        function updateRestTeachersDisplay() {
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+                const restTeachersDiv = document.getElementById(`rest-teachers-${day}`);
+                const restTeachers = restTeachersByDay[day];
+                restTeachersDiv.innerHTML = Array.from(restTeachers).map(t => `
+                    <div class="rest-teacher">
+                        <span>${t}</span>
+                        <div class="delete-button" onclick="toggleRestTeacher('${day}', '${t}')">-</div>
+                    </div>
+                `).join('');
+            });
+            updateTeacherOptions();
+        }
+
+        // 切换休息老师状态
+        function toggleRestTeacher(day, teacher) {
+            if (restTeachersByDay[day].has(teacher)) {
+                restTeachersByDay[day].delete(teacher);
+            } else {
+                restTeachersByDay[day].add(teacher);
+            }
+            updateRestList(day);
+        }
+
+        // 添加年级课程
+        function addGradeSection(button) {
+            const td = button.parentElement;
+            const time = td.getAttribute('data-time');
+            const day = td.getAttribute('data-day');
+            const uniqueId = Date.now() + Math.random().toString(36).substr(2, 9);
+
+            const gradeSection = document.createElement('div');
+            gradeSection.className = 'grade-section';
+            gradeSection.innerHTML = `
+                <div class="grade-label">年级:</div>
+                <select name="${time}-grade-${uniqueId}" class="grade-select" data-time="${time}" data-day="${day}" data-id="${uniqueId}">
+                    ${grades.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                </select><br>
+                <div class="subject-section" data-id="${uniqueId}">
+                    科目: 
+                    <select name="${time}-subject-${uniqueId}" class="subject-select" data-time="${time}" data-day="${day}" data-grade="" data-id="${uniqueId}">
+                        <option value="无课">无课</option>
+                        <option value="素描">素描</option>
+                        <option value="色彩">色彩</option>
+                        <option value="速写">速写</option>
+                    </select><br>
+                    <div class="teacher-section" data-subject="${time}-${uniqueId}">
+                        主教: 
+                        <select name="${time}-main-${uniqueId}" class="main-teacher-select" data-time="${time}" data-day="${day}" data-grade="" data-id="${uniqueId}">
+                            ${teachers.map(t => `<option value="${t}">${t}</option>`).join('')}
+                            <option value="助教代课">助教代课</option>
+                        </select><br>
+                        助教: 
+                        <select name="${time}-assist-${uniqueId}" class="assist-teacher-select" data-time="${time}" data-day="${day}" data-grade="" data-id="${uniqueId}">
+                            <option value="无">无</option>
+                            ${teachers.map(t => `<option value="${t}">${t}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="delete-button" onclick="deleteGradeSection(this)">-</div>
+            `;
+
+            td.insertBefore(gradeSection, button);
+            updateEventListeners();
+            updateTeacherOptions();
+            updateGradeOptions();
+            updateSubjectDisplay();
+        }
+
+        // 删除年级课程
+        function deleteGradeSection(button) {
+            const gradeSection = button.parentElement;
+            gradeSection.remove();
+            updateTeacherOptions();
+            updateGradeOptions();
+        }
+
+        // 更新事件监听器
+        function updateEventListeners() {
+            const gradeSelects = document.querySelectorAll('.grade-select');
+            const subjectSelects = document.querySelectorAll('.subject-select');
+            const mainTeacherSelects = document.querySelectorAll('.main-teacher-select');
+            const assistTeacherSelects = document.querySelectorAll('.assist-teacher-select');
+
+            gradeSelects.forEach(select => {
+                select.removeEventListener('change', handleGradeChange);
+                select.addEventListener('change', handleGradeChange);
+            });
+
+            subjectSelects.forEach(select => {
+                select.removeEventListener('change', handleSubjectChange);
+                select.addEventListener('change', handleSubjectChange);
+            });
+
+            mainTeacherSelects.forEach(select => {
+                select.removeEventListener('change', updateTeacherOptions);
+                select.addEventListener('change', updateTeacherOptions);
+            });
+
+            assistTeacherSelects.forEach(select => {
+                select.removeEventListener('change', updateTeacherOptions);
+                select.addEventListener('change', updateTeacherOptions);
+            });
+        }
+
+        // 处理年级选择变化
+        function handleGradeChange(event) {
+            const select = event.target;
+            const grade = select.value;
+            const uniqueId = select.getAttribute('data-id');
+            const subjectSelect = select.parentElement.querySelector('.subject-select');
+            const mainSelect = select.parentElement.querySelector('.main-teacher-select');
+            const assistSelect = select.parentElement.querySelector('.assist-teacher-select');
+
+            subjectSelect.setAttribute('data-grade', grade);
+            mainSelect.setAttribute('data-grade', grade);
+            assistSelect.setAttribute('data-grade', grade);
+            updateTeacherOptions();
+            updateGradeOptions();
+        }
+
+        // 处理科目选择变化
+        function handleSubjectChange(event) {
+            updateSubjectDisplay();
+            updateTeacherOptions();
+        }
+
+        // 更新科目选择框的显示状态
+        function updateSubjectDisplay() {
+            const subjectSelects = document.querySelectorAll('.subject-select');
+            subjectSelects.forEach(select => {
+                const subjectValue = select.value;
+                const teacherSection = select.parentElement.querySelector('.teacher-section');
+                if (subjectValue === '无课') {
+                    teacherSection.classList.add('hidden');
+                } else {
+                    teacherSection.classList.remove('hidden');
+                }
+            });
+        }
+
+        // 更新老师选项
+        function updateTeacherOptions() {
+            const mainTeacherSelects = document.querySelectorAll('.main-teacher-select');
+            const assistTeacherSelects = document.querySelectorAll('.assist-teacher-select');
+            const subjectSelects = document.querySelectorAll('.subject-select');
+
+            // 按时段分组并记录已选择的老师
+            const timeGroups = {};
+            mainTeacherSelects.forEach(select => {
+                const time = select.getAttribute('data-time');
+                const day = select.getAttribute('data-day');
+                const subjectSelect = select.closest('.grade-section').querySelector('.subject-select');
+                if (subjectSelect.value !== '无课') {
+                    if (!timeGroups[time]) {
+                        timeGroups[time] = { main: [], assist: [], selectedTeachers: new Set() };
+                    }
+                    timeGroups[time].main.push(select);
+                }
+            });
+            assistTeacherSelects.forEach(select => {
+                const time = select.getAttribute('data-time');
+                const day = select.getAttribute('data-day');
+                const subjectSelect = select.closest('.grade-section').querySelector('.subject-select');
+                if (subjectSelect.value !== '无课') {
+                    if (!timeGroups[time]) {
+                        timeGroups[time] = { main: [], assist: [], selectedTeachers: new Set() };
+                    }
+                    timeGroups[time].assist.push(select);
+                }
+            });
+
+            // 更新已选择老师集合
+            for (const time in timeGroups) {
+                const mainSelects = timeGroups[time].main;
+                const assistSelects = timeGroups[time].assist;
+                mainSelects.forEach(select => {
+                    if (select.value && select.value !== '助教代课') {
+                        timeGroups[time].selectedTeachers.add(select.value);
+                    }
+                });
+                assistSelects.forEach(select => {
+                    if (select.value && select.value !== '无') {
+                        timeGroups[time].selectedTeachers.add(select.value);
+                    }
+                });
+            }
+
+            // 更新所有选择框的老师选项
+            mainTeacherSelects.forEach(select => {
+                const currentValue = select.value;
+                const time = select.getAttribute('data-time');
+                const day = select.getAttribute('data-day');
+                const restTeachers = restTeachersByDay[day] || new Set();
+                const selectedTeachers = timeGroups[time]?.selectedTeachers || new Set();
+                select.innerHTML = `
+                    ${teachers.map(t => `
+                        <option value="${t}" ${t === currentValue ? 'selected' : ''} 
+                            ${restTeachers.has(t) || (selectedTeachers.has(t) && t !== currentValue) ? 'disabled' : ''}>
+                            ${restTeachers.has(t) ? `${t} (休息中)` : selectedTeachers.has(t) && t !== currentValue ? `${t} (已排课)` : t}
+                        </option>
+                    `).join('')}
+                    <option value="助教代课" ${currentValue === '助教代课' ? 'selected' : ''}>助教代课</option>
+                `;
+            });
+            assistTeacherSelects.forEach(select => {
+                const currentValue = select.value;
+                const time = select.getAttribute('data-time');
+                const day = select.getAttribute('data-day');
+                const restTeachers = restTeachersByDay[day] || new Set();
+                const selectedTeachers = timeGroups[time]?.selectedTeachers || new Set();
+                select.innerHTML = `
+                    <option value="无" ${currentValue === '无' ? 'selected' : ''}>无</option>
+                    ${teachers.map(t => `
+                        <option value="${t}" ${t === currentValue ? 'selected' : ''} 
+                            ${restTeachers.has(t) || (selectedTeachers.has(t) && t !== currentValue) ? 'disabled' : ''}>
+                            ${restTeachers.has(t) ? `${t} (休息中)` : selectedTeachers.has(t) && t !== currentValue ? `${t} (已排课)` : t}
+                        </option>
+                    `).join('')}
+                `;
+            });
+
+            // 处理每个时段的冲突检测
+            for (const time in timeGroups) {
+                const mainSelects = timeGroups[time].main;
+                const assistSelects = timeGroups[time].assist;
+                const teacherSelections = {};
+
+                mainSelects.forEach(select => {
+                    const grade = select.getAttribute('data-grade');
+                    const teacher = select.value;
+                    if (teacher && teacher !== '助教代课') {
+                        if (!teacherSelections[teacher]) teacherSelections[teacher] = [];
+                        teacherSelections[teacher].push({ select, grade, type: 'main' });
+                    }
+                });
+                assistSelects.forEach(select => {
+                    const grade = select.getAttribute('data-grade');
+                    const teacher = select.value;
+                    if (teacher && teacher !== '无') {
+                        if (!teacherSelections[teacher]) teacherSelections[teacher] = [];
+                        teacherSelections[teacher].push({ select, grade, type: 'assist' });
+                    }
+                });
+
+                for (const teacher in teacherSelections) {
+                    const selections = teacherSelections[teacher];
+                    if (selections.length > 1) {
+                        selections.forEach(selection => {
+                            selection.select.classList.add('conflict');
+                        });
+                    } else {
+                        selections.forEach(selection => {
+                            selection.select.classList.remove('conflict');
+                        });
+                    }
+                }
+            }
+        }
+
+        // 更新年级选项
+        function updateGradeOptions() {
+            const gradeSelects = document.querySelectorAll('.grade-select');
+            const timeGroups = {};
+
+            // 按时段分组并记录已选择的年级
+            gradeSelects.forEach(select => {
+                const time = select.getAttribute('data-time');
+                if (!timeGroups[time]) {
+                    timeGroups[time] = { grades: [], selectedGrades: new Set() };
+                }
+                timeGroups[time].grades.push(select);
+            });
+
+            // 更新已选择年级集合
+            for (const time in timeGroups) {
+                const gradeSelectsInTime = timeGroups[time].grades;
+                gradeSelectsInTime.forEach(select => {
+                    if (select.value) {
+                        timeGroups[time].selectedGrades.add(select.value);
+                    }
+                });
+            }
+
+            // 更新所有年级选择框选项
+            gradeSelects.forEach(select => {
+                const currentValue = select.value;
+                const time = select.getAttribute('data-time');
+                const selectedGrades = timeGroups[time]?.selectedGrades || new Set();
+                select.innerHTML = grades.map(g => `
+                    <option value="${g}" ${g === currentValue ? 'selected' : ''} 
+                        ${selectedGrades.has(g) && g !== currentValue ? 'disabled' : ''}>
+                        ${selectedGrades.has(g) && g !== currentValue ? `${g} (已排课)` : g}
+                    </option>
+                `).join('');
+            });
+        }
+
+        // 右键自定义单元格背景颜色
+        document.querySelectorAll('td').forEach(td => {
+            td.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                const existingPicker = document.querySelector('.color-picker');
+                if (existingPicker) existingPicker.remove();
+
+                const picker = document.createElement('div');
+                picker.className = 'color-picker';
+                picker.style.left = `${event.pageX}px`;
+                picker.style.top = `${event.pageY}px`;
+                picker.innerHTML = `
+                    <label>选择背景颜色:</label><br>
+                    <input type="color" id="color-input" value="${td.style.backgroundColor || '#ffffff'}"><br>
+                    <input type="text" id="color-text" placeholder="输入颜色值 (如 #FF0000)" value="${td.style.backgroundColor || ''}"><br>
+                    <button onclick="resetColor('${td.id || td.dataset.time || 'temp-' + Date.now()}')">重置</button>
+                `;
+                document.body.appendChild(picker);
+
+                const colorInput = picker.querySelector('#color-input');
+                const colorText = picker.querySelector('#color-text');
+
+                // 色环选择直接应用
+                colorInput.addEventListener('input', () => {
+                    td.style.backgroundColor = colorInput.value;
+                    colorText.value = colorInput.value;
+                });
+
+                // 文本输入同步
+                colorText.addEventListener('input', () => {
+                    if (/^#[0-9A-Fa-f]{6}$/.test(colorText.value)) {
+                        colorInput.value = colorText.value;
+                        td.style.backgroundColor = colorText.value;
+                    }
+                });
+            });
+        });
+
+        function resetColor(tdId) {
+            const td = document.querySelector(`td[data-time="${tdId}"]`) || document.getElementById(tdId);
+            td.style.backgroundColor = td.classList.contains('time-slot') ? '#fff7e6' : '';
+            document.querySelector('.color-picker').remove();
+        }
+
+        // 页面加载时初始化
+        initCustomLists();
+        updateTeacherOptions();
+        updateGradeOptions();
+
+        // 点击页面其他地方关闭休息列表和颜色选择器
+        document.addEventListener('click', (event) => {
+            const restLists = document.querySelectorAll('.rest-list');
+            restLists.forEach(list => {
+                if (!list.contains(event.target) && !event.target.classList.contains('rest-button')) {
+                    list.style.display = 'none';
+                }
+            });
+            const colorPicker = document.querySelector('.color-picker');
+            if (colorPicker && !colorPicker.contains(event.target)) {
+                colorPicker.remove();
+            }
+        });
+    </script>
 </body>
 </html>
